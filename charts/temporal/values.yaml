@@ -535,6 +535,19 @@ elasticsearch:
           spec:
             nodeSelector:
               cloud.google.com/gke-nodepool: temporal
+  # Resource settings for Elasticsearch
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "500m"
+      memory: "1Gi"
+  # Node selection settings
+  nodeSelector:
+    cloud.google.com/gke-nodepool: temporal
+  # Make antiAffinity soft to allow more flexible scheduling
+  antiAffinity: "soft"
 
 prometheus:
   enabled: true
