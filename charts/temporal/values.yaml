@@ -3,6 +3,7 @@ fullnameOverride: ""
 # Chart debug mode
 # (eg. disable helm hook delete policy)
 debug: false
+
 imagePullSecrets: {}
 # Custom Service account management
 serviceAccount:
@@ -75,15 +76,23 @@ server:
   # choice for the user. This also increases chances charts run on environments with little
   # resources, such as Minikube. If you do want to specify resources, uncomment the following
   # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #  cpu: 100m
-  #  memory: 128Mi
-  # requests:
-  #  cpu: 100m
-  #  memory: 128Mi
+  limits:
+    cpu: 1000m
+    memory: 1024Mi
+  requests:
+    cpu: 1000m
+    memory: 1024Mi
   nodeSelector: {}
   tolerations: []
-  affinity: {}
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: cloud.google.com/gke-nodepool
+                operator: In
+                values:
+                  - temporal
   additionalVolumes: []
   additionalVolumeMounts: []
   additionalEnv: []
@@ -241,7 +250,15 @@ server:
     resources: {}
     nodeSelector: {}
     tolerations: []
-    affinity: {}
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: cloud.google.com/gke-nodepool
+                  operator: In
+                  values:
+                    - temporal
     additionalEnv: []
     containerSecurityContext: {}
     topologySpreadConstraints: []
@@ -270,7 +287,15 @@ server:
     resources: {}
     nodeSelector: {}
     tolerations: []
-    affinity: {}
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: cloud.google.com/gke-nodepool
+                  operator: In
+                  values:
+                    - temporal
     additionalEnv: []
     containerSecurityContext: {}
     topologySpreadConstraints: []
@@ -294,7 +319,15 @@ server:
     resources: {}
     nodeSelector: {}
     tolerations: []
-    affinity: {}
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: cloud.google.com/gke-nodepool
+                  operator: In
+                  values:
+                    - temporal
     additionalEnv: []
     additionalEnvSecretName: ""
     containerSecurityContext: {}
@@ -319,7 +352,15 @@ server:
     resources: {}
     nodeSelector: {}
     tolerations: []
-    affinity: {}
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: cloud.google.com/gke-nodepool
+                  operator: In
+                  values:
+                    - temporal
     additionalEnv: []
     containerSecurityContext: {}
     topologySpreadConstraints: []
@@ -343,7 +384,15 @@ server:
     resources: {}
     nodeSelector: {}
     tolerations: []
-    affinity: {}
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: cloud.google.com/gke-nodepool
+                  operator: In
+                  values:
+                    - temporal
     additionalEnv: []
     containerSecurityContext: {}
     topologySpreadConstraints: []
@@ -364,7 +413,15 @@ admintools:
   podAnnotations: {}
   nodeSelector: {}
   tolerations: []
-  affinity: {}
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: cloud.google.com/gke-nodepool
+                operator: In
+                values:
+                  - temporal
   additionalVolumes: []
   additionalVolumeMounts: []
   additionalEnv: []
@@ -414,15 +471,23 @@ web:
   # choice for the user. This also increases chances charts run on environments with little
   # resources, such as Minikube. If you do want to specify resources, uncomment the following
   # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #  cpu: 100m
-  #  memory: 128Mi
-  # requests:
-  #  cpu: 100m
-  #  memory: 128Mi
+  limits:
+    cpu: 1000m
+    memory: 1024Mi
+  requests:
+    cpu: 1000m
+    memory: 1024Mi
   nodeSelector: {}
   tolerations: []
-  affinity: {}
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: cloud.google.com/gke-nodepool
+                operator: In
+                values:
+                  - temporal
   additionalVolumes: []
   additionalVolumeMounts: []
   # Adjust Web UI config with environment variables:
@@ -449,7 +514,7 @@ schema:
   securityContext: {}
 elasticsearch:
   enabled: true
-  replicas: 3
+  replicas: 1
   persistence:
     enabled: false
   imageTag: 7.17.3
@@ -461,6 +526,16 @@ elasticsearch:
   username: ""
   password: ""
   visibilityIndex: "temporal_visibility_v1_dev"
+  spec:
+    version: 7.17.3
+    nodeSets:
+      - name: master
+        count: 1
+        podTemplate:
+          spec:
+            nodeSelector:
+              cloud.google.com/gke-nodepool: temporal
+
 prometheus:
   enabled: true
   nodeExporter:
@@ -523,6 +598,18 @@ grafana:
         datasource: TemporalMetrics
 cassandra:
   enabled: true
+  spec:
+    template:
+      spec:
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+                - matchExpressions:
+                    - key: cloud.google.com/gke-nodepool
+                      operator: In
+                      values:
+                        - temporal
   persistence:
     enabled: false
   image:
@@ -534,8 +621,8 @@ cassandra:
     ports:
       cql: 9042
     num_tokens: 4
-    max_heap_size: 512M
-    heap_new_size: 128M
+    max_heap_size: 1024M
+    heap_new_size: 512M
     seed_size: 0
   service:
     type: ClusterIP
